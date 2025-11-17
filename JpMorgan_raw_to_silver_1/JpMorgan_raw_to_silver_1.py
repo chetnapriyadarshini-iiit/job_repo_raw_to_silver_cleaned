@@ -41,28 +41,6 @@ raw_parquet_path = "s3://majorproject02-raw-jpmorgan/raw_parquet/"
 silvermain_glue_path1 = "s3://majorproject02-jpmorgan-silver/partitioned_by_department/"
 silvermain_glue_path2 = "s3://majorproject02-jpmorgan-silver/partitioned_by_state_department/"
 silver_spark_path = "s3://majorproject02-jpmorgan-silver/cleaned_data_stored_as_spark_df/"
-
-def sink_with_catalog(path: str, table_name: str, partition_keys: list, ctx_name: str):
-    """
-    Create a Glue catalog sink that:
-      - writes Parquet to S3
-      - updates/creates the Glue Catalog table (schema + partitions)
-    partition_keys: list of partition columns ([] for non-partitioned KPIs)
-    """
-    sink = glueContext.getSink(
-        path=path,
-        connection_type="s3",
-        updateBehavior="UPDATE_IN_DATABASE",      # merge schema/partitions if table exists
-        partitionKeys=partition_keys,
-        compression="snappy",
-        enableUpdateCatalog=True,                 # <-- critical: tells Glue to maintain the Catalog table
-        transformation_ctx=ctx_name
-    )
-    sink.setCatalogInfo(catalogDatabase=GLUE_DB, catalogTableName=table_name)
-    sink.setFormat("glueparquet")                 # optimized writer for Parquet + Catalog
-    return sink
-
-
 # =========================
 # FLAG DISPLAY FUNCTION
 # =========================
