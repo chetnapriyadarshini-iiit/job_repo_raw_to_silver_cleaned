@@ -8,6 +8,7 @@ from awsglue.dynamicframe import DynamicFrame
 from pyspark.sql import functions as F, types as T
 from pyspark.sql.functions import col, trim, upper, when, current_date
 from pyspark.sql.types import IntegerType, LongType
+import re
 
 ## @params: [JOB_NAME]
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
@@ -17,7 +18,7 @@ sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-job.init(args[JOB_NAME], args)
+job.init("JpMorrgan_raw_to_silver", args={})
 
 #production level , 1st data quality and preprocessing flag check and then implementing the checked flag for changing 
 #ex if only flaged of outlier , then outlier removing fuction will execute . 
@@ -34,6 +35,8 @@ NUMERICALS   = ["salary", "age", "bonus"]
 BUCKET_BASE = "majorproject02-jpmorgan-bronze/"
 BRONZE_PARQUET = "fromdf-jpmorganoffice_parquet" #Spark df in parquet format
 GLUE_DB = "majorproject02-jpmorgan_db"
+
+raw_parquet_path = "s3://majorproject02-raw-jpmorgan/raw_parquet/"
 
 silvermain_glue_path1 = "s3://majorproject02-jpmorgan-silver/partitioned_by_department/"
 silvermain_glue_path2 = "s3://majorproject02-jpmorgan-silver/partitioned_by_state_department/"
@@ -626,7 +629,18 @@ def execute_complete_workflow(df):
     print("   To proceed, call: execute_main_pipeline(df, cfg_live)")
     
     return cfg_live
+    
+df = spark.read.parquet(raw_parquet_path)
 
+df = df.select(
+    col("employee_id").cast("string"),
+    col("employee_name").cast("string"),
+    col("department").cast("string"),
+    col("state").cast("string"),
+    col("salary").cast("double"),
+    col("age").cast("int"),
+    col("bonus").cast("double")
+)
 # Phase 01: Generate configuration
 # Generate configuration flags based on data analysis
 cfg_live = execute_complete_workflow(df)
@@ -648,7 +662,6 @@ try:
     df_silver.write \
         .mode("overwrite") \
         .option("compression", "snappy") \
-        .partitionBy("department") \
         .parquet(silver_spark_path)
     
     # Verify Spark write
