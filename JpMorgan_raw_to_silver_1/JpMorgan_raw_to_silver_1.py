@@ -11,6 +11,7 @@ from pyspark.sql.types import IntegerType, LongType
 
 ## @params: [JOB_NAME]
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+JOB_NAME = args['JOB_NAME']
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
