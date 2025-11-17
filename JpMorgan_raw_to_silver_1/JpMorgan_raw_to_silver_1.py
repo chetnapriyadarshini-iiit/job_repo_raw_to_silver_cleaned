@@ -10,8 +10,7 @@ from pyspark.sql.functions import col, trim, upper, when, current_date
 from pyspark.sql.types import IntegerType, LongType
 
 ## @params: [JOB_NAME]
-JOB_NAME = 'JpMorgan_raw_to_silver_1'
-args = getResolvedOptions(sys.argv, [JOB_NAME])
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
